@@ -93,7 +93,7 @@ class MainViewModel(QObject):
         try:
             if self._plot_all_mode:
                 plot_data = self._get_processed_all_channels(buffer_2d, self._current_mode)
-                self.view.live_view.update_all(plot_data, offset_step=1.0)
+                self.view.live_view.update_all(plot_data, offset_step=1500.0)
             else:
                 y = self._get_processed_single_channel(buffer_2d, self._current_channel, self._current_mode)
                 self.view.live_view.update_single(y)
