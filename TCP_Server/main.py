@@ -4,11 +4,11 @@ import numpy as np
 import time
 import threading
 from pathlib import Path
-
-
+ 
+ 
 class EMGTCPServer:
     def __init__(self, host='localhost', port=12345,
-                 pkl_file=r"C:\Users\Shaheer Ahmed\Desktop\Applied Programming\Applied-Programming-2026\recording.pkl"):
+                 pkl_file=str(Path(__file__).parent / "recording.pkl")):
         self.host = host
         self.port = port
         self.pkl_file = pkl_file
@@ -20,7 +20,7 @@ class EMGTCPServer:
         self.CHANNELS = 32
         self.SAMPLES_PER_PACKET = 18
         self.load_data()
-
+ 
     def load_data(self):
         """Load the EMG data from the PKL file"""
         try:
@@ -33,7 +33,7 @@ class EMGTCPServer:
         except Exception as e:
             print(f"Error loading data: {e}")
             raise
-
+ 
     def print_data(self, data, window_index):
         """Print the current chunk of data"""
         print(f"\nSending window {window_index}:")
@@ -42,7 +42,7 @@ class EMGTCPServer:
         for i in range(data.shape[0]):
             print(f"Channel {i + 1}: {data[i, :]}")
         print("-" * 50)
-
+ 
     def start(self):
         """Start the TCP server"""
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -51,12 +51,12 @@ class EMGTCPServer:
         self.server_socket.listen(5)
         self.running = True
         print(f"Server started on {self.host}:{self.port}")
-
+ 
         # Start accepting connections in a separate thread
         accept_thread = threading.Thread(target=self.accept_connections)
         accept_thread.daemon = True
         accept_thread.start()
-
+ 
     def accept_connections(self):
         """Accept incoming connections"""
         while self.running:
@@ -71,35 +71,35 @@ class EMGTCPServer:
             except Exception as e:
                 if self.running:
                     print(f"Error accepting connection: {e}")
-
+ 
     def handle_client(self, client_socket):
         try:
             num_windows = self.emg_signal.shape[2]
             window_index = 0
-
+ 
             while self.running and window_index < num_windows:
                 current_window = self.emg_signal[:, :, window_index].astype(np.float64)
-
+ 
                 if window_index == 0:
                     print("server dtype:", current_window.dtype)
                     print("server shape:", current_window.shape)
                     print("server bytes:", current_window.nbytes)
-
+ 
                 data_bytes = current_window.tobytes(order="C")
                 client_socket.sendall(data_bytes)
-
+ 
                 sleep_time = self.SAMPLES_PER_PACKET / self.sampling_rate
                 time.sleep(sleep_time)
-
+ 
                 window_index += 1
-
+ 
         except Exception as e:
             print(f"Error handling client: {e}")
         finally:
             if client_socket in self.clients:
                 self.clients.remove(client_socket)
             client_socket.close()
-
+ 
     def stop(self):
         """Stop the TCP server"""
         self.running = False
@@ -109,8 +109,8 @@ class EMGTCPServer:
             client.close()
         self.clients.clear()
         print("Server stopped")
-
-
+ 
+ 
 if __name__ == "__main__":
     # Create and start the server
     server = EMGTCPServer()
